@@ -74,6 +74,7 @@ type AddrResponse struct {
 }
 
 func getAddrFromIP(ctx context.Context, ip string) (string, error) {
+	ip = trimPort(api)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf(addrFromIPURL, ip), http.NoBody)
 	if err != nil {
 		return "", err
@@ -90,4 +91,13 @@ func getAddrFromIP(ctx context.Context, ip string) (string, error) {
 		return "", fmt.Errorf("unsuccessful API call")
 	}
 	return fmt.Sprintf("%s, %s, %s", respStruct.Country, respStruct.City, respStruct.District), nil
+}
+
+func trimPort(ip string) string {
+	for i, c := range ip {
+		if c == ':' {
+			return ip[:i]
+		}
+	}
+	return ip
 }
