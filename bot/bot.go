@@ -3,7 +3,6 @@ package bot
 
 import (
 	"context"
-	"sync"
 
 	"go.uber.org/zap"
 
@@ -18,14 +17,13 @@ type Bot struct {
 	logger      *zap.SugaredLogger
 	ownerID     int64
 	connections map[Name]*Connection
-	mutex       *sync.RWMutex
 }
 
 // New creates a new bot
 func New(token string, logger *zap.SugaredLogger, userID int64) (*Bot, error) {
 	//Create bot using provided dependencies
 	m := make(map[Name]*Connection)
-	bot := &Bot{logger: logger, ownerID: userID, mutex: &sync.RWMutex{}, connections: m}
+	bot := &Bot{logger: logger, ownerID: userID, connections: m}
 
 	//Create telegram bot with a default handler
 	b, err := tgbotapi.New(token, tgbotapi.WithDefaultHandler(bot.defaultHandler))

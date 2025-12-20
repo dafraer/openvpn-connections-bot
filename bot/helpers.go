@@ -24,21 +24,24 @@ func (b *Bot) parseConnection(msg string) (*Connection, error) {
 	args := strings.Split(msg, ",")
 	if len(args) == 5 {
 		connection := &Connection{}
+
 		connection.Name = Name(args[0])
 		connection.IP = args[1]
+
 		bytesIn, err := strconv.ParseUint(args[2], 10, 64)
 		if err != nil {
 			b.logger.Errorw("Error parsing bytes recieved", "error", err)
 			return nil, err
 		}
 		connection.BytesRecieved = bytesIn
+
 		bytesOut, err := strconv.ParseUint(args[3], 10, 64)
 		if err != nil {
 			b.logger.Errorw("Error parsing bytes sent", "error", err)
 			return nil, err
 		}
-
 		connection.BytesSent = bytesOut
+
 		connection.Since = args[4]
 		return connection, nil
 	}

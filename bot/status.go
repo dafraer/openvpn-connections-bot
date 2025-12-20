@@ -81,10 +81,9 @@ func (b *Bot) processStatusFile(ctx context.Context, file *os.File) {
 			}
 
 			connection.Address = realAddr
-			b.mutex.Lock()
 			b.connections[connection.Name] = connection
-			b.mutex.Unlock()
-			b.SendNewConnection(ctx, connection)
+			msg := formatNewConnectionMessage(connection)
+			b.sendMessage(ctx, msg, b.ownerID)
 		}
 	}
 	//Check if anyone disconnected
@@ -95,9 +94,4 @@ func (b *Bot) processStatusFile(ctx context.Context, file *os.File) {
 			delete(b.connections, k)
 		}
 	}
-}
-
-func (b *Bot) SendNewConnection(ctx context.Context, conn *Connection) {
-	msg := formatNewConnectionMessage(conn)
-	b.sendMessage(ctx, msg, b.ownerID)
 }
