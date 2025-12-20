@@ -29,10 +29,11 @@ const (
 
 type Connection struct {
 	Name          Name
+	IP            string
 	Address       string
 	BytesRecieved uint64
 	BytesSent     uint64
-	Since         time.Time
+	Since         string
 }
 
 func (b *Bot) MonitorStatus(ctx context.Context) {
@@ -67,7 +68,16 @@ func (b *Bot) processStatusFile(ctx context.Context, file *os.File) {
 			b.logger.Errorw("Error parsing connection string", "error", err)
 		}
 		if _, ok := b.connections[connection.Name]; !ok {
+			//add real address
+			realAddr, err := getAddrFromIP(ctx, connection.IP)
+			if err != nil {
+				b.logger.Errorw("Error calling address API", "error", err)
+			}
+
+			connection.Address = realAddr
+			b.mutex.Lock()
 			b.connections[connection.Name] = connection
+			b.mutex.Unlock()
 			b.SendNewConnection(ctx, connection)
 		}
 	}

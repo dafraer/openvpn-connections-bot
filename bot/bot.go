@@ -3,6 +3,7 @@ package bot
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"go.uber.org/zap"
@@ -24,7 +25,8 @@ type Bot struct {
 // New creates a new bot
 func New(token string, logger *zap.SugaredLogger, userID int64) (*Bot, error) {
 	//Create bot using provided dependencies
-	bot := &Bot{logger: logger, ownerID: userID, mutex: &sync.RWMutex{}}
+	m := make(map[Name]*Connection)
+	bot := &Bot{logger: logger, ownerID: userID, mutex: &sync.RWMutex{}, connections: m}
 
 	//Create telegram bot with a default handler
 	b, err := tgbotapi.New(token, tgbotapi.WithDefaultHandler(bot.defaultHandler))
@@ -48,23 +50,29 @@ func (b *Bot) defaultHandler(ctx context.Context, _ *tgbotapi.Bot, update *model
 	if update.Message != nil && update.Message.Chat.ID == b.ownerID {
 		switch update.Message.Text {
 		case "/start":
-			b.processStart(ctx, update)
+			b.processStartHandler(ctx, update)
 		case "/help":
-			b.processHelp(ctx, update)
+			b.processHelpHanler(ctx, update)
 		case "/connections":
-			b.processConnections(ctx, update)
+			b.processConnectionsHandler(ctx, update)
 		}
 	}
 }
 
-func (b *Bot) processStart(ctx context.Context, update *models.Update) {
+func (b *Bot) processStartHandler(ctx context.Context, update *models.Update) {
 	b.sendMessage(ctx, "Go away", update.Message.Chat.ID)
 }
 
-func (b *Bot) processHelp(ctx context.Context, update *models.Update) {
+func (b *Bot) processHelpHanler(ctx context.Context, update *models.Update) {
 	b.sendMessage(ctx, "Help ain't coming", update.Message.Chat.ID)
 }
 
-func (b *Bot) processConnections(ctx context.Context, update *models.Update) {
-
+func (b *Bot) processConnectionsHandler(ctx context.Context, update *models.Update) {
+	msg, err := b.formatConnectionsJSON()
+	if err != nil {
+		b.logger.Errorw("Error formatting JSON", "error", err)
+		b.sendMessage(ctx, "Sorry, error occured try again", b.ownerID)
+	}
+	stringMessage := fmt.Sprintf("```%v```", msg)
+	b.sendMessage(ctx, stringMessage, b.ownerID)
 }
