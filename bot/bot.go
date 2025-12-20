@@ -52,7 +52,7 @@ func (b *Bot) defaultHandler(ctx context.Context, _ *tgbotapi.Bot, update *model
 		case "/start":
 			b.processStartHandler(ctx, update)
 		case "/help":
-			b.processHelpHanler(ctx, update)
+			b.processHelpHandler(ctx, update)
 		case "/connections":
 			b.processConnectionsHandler(ctx, update)
 		}
@@ -63,7 +63,7 @@ func (b *Bot) processStartHandler(ctx context.Context, update *models.Update) {
 	b.sendMessage(ctx, "Go away", update.Message.Chat.ID)
 }
 
-func (b *Bot) processHelpHanler(ctx context.Context, update *models.Update) {
+func (b *Bot) processHelpHandler(ctx context.Context, update *models.Update) {
 	b.sendMessage(ctx, "Help ain't coming", update.Message.Chat.ID)
 }
 
