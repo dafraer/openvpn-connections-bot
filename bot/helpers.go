@@ -23,13 +23,13 @@ func (b *Bot) parseConnection(msg string) (*Connection, error) {
 		connection := &Connection{}
 		connection.Name = Name(args[0])
 		connection.Address = args[1]
-		bytesIn, err := strconv.ParseUint(args[1], 10, 64)
+		bytesIn, err := strconv.ParseUint(args[2], 10, 64)
 		if err != nil {
 			b.logger.Errorw("Error parsing bytes recieved", "error", err)
 			return nil, err
 		}
 		connection.BytesRecieved = bytesIn
-		bytesOut, err := strconv.ParseUint(args[1], 10, 64)
+		bytesOut, err := strconv.ParseUint(args[3], 10, 64)
 		if err != nil {
 			b.logger.Errorw("Error parsing bytes sent", "error", err)
 			return nil, err
