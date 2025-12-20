@@ -48,11 +48,12 @@ func (b *Bot) parseConnection(msg string) (*Connection, error) {
 func formatConnectionMessage(conn *Connection) string {
 	newConnMsg := `
 	New connection 
-	Name: %s 
+	Name: %s
+	IP: %s
 	From: %s 
 	Connected Since: %v
 	`
-	return fmt.Sprintf(newConnMsg, string(conn.Name), conn.Address, conn.Since)
+	return fmt.Sprintf(newConnMsg, string(conn.Name), conn.IP, conn.Address, conn.Since)
 }
 
 func (b *Bot) formatConnectionsJSON() ([]byte, error) {
@@ -73,7 +74,11 @@ type AddrResponse struct {
 }
 
 func getAddrFromIP(ctx context.Context, ip string) (string, error) {
-	resp, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf(addrFromIPURL, ip), http.NoBody)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf(addrFromIPURL, ip), http.NoBody)
+	if err != nil {
+		return "", err
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err
 	}
