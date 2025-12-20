@@ -69,6 +69,15 @@ func (b *Bot) processStatusFile(ctx context.Context, file *os.File) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == endLine {
+			//Check if anyone disconnected
+			for k, v := range b.connections {
+				if _, ok := tmp[k]; !ok {
+					b.logger.Infow("Disconnected", "connection", v)
+					msg := formatDisconnected(v)
+					b.sendMessage(ctx, msg, b.ownerID)
+					delete(b.connections, k)
+				}
+			}
 			return
 		}
 		connection, err := b.parseConnection(line)
@@ -94,13 +103,5 @@ func (b *Bot) processStatusFile(ctx context.Context, file *os.File) {
 			b.sendMessage(ctx, msg, b.ownerID)
 		}
 	}
-	//Check if anyone disconnected
-	for k, v := range b.connections {
-		if _, ok := tmp[k]; !ok {
-			b.logger.Infow("Disconnected", "connection", v)
-			msg := formatDisconnected(v)
-			b.sendMessage(ctx, msg, b.ownerID)
-			delete(b.connections, k)
-		}
-	}
+
 }
