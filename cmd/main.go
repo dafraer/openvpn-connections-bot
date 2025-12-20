@@ -40,8 +40,8 @@ func main() {
 	//Create logger
 	cfg := zap.NewDevelopmentConfig()
 	cfg.Development = true
-	cfg.OutputPaths = []string{"stdout", logPath}
-	cfg.ErrorOutputPaths = []string{"stderr", logPath}
+	cfg.OutputPaths = []string{logPath}
+	cfg.ErrorOutputPaths = []string{logPath}
 
 	logger, err := cfg.Build()
 	if err != nil {

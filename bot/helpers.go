@@ -45,7 +45,7 @@ func (b *Bot) parseConnection(msg string) (*Connection, error) {
 	return nil, fmt.Errorf("error parsing string, not enough args")
 }
 
-func formatConnectionMessage(conn *Connection) string {
+func formatNewConnectionMessage(conn *Connection) string {
 	newConnMsg := `
 	New connection 
 	Name: %s
@@ -56,14 +56,17 @@ func formatConnectionMessage(conn *Connection) string {
 	return fmt.Sprintf(newConnMsg, string(conn.Name), conn.IP, conn.Address, conn.Since)
 }
 
-func (b *Bot) formatConnectionsJSON() ([]byte, error) {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-	table, err := json.Marshal(b.connections)
-	if err != nil {
-		return nil, err
-	}
-	return table, nil
+func formatDisconnected(conn *Connection) string {
+	disconnected := `
+	Disconnected
+    Name: %s
+	IP: %s
+	From: %s 
+	Connected Since: %v
+	Bytes Recieved: %v
+	Bytes Sent: %v
+	`
+	return fmt.Sprintf(disconnected, string(conn.Name), conn.IP, conn.Address, conn.Since, conn.BytesRecieved, conn.BytesSent)
 }
 
 type AddrResponse struct {

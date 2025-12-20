@@ -3,7 +3,6 @@ package bot
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"go.uber.org/zap"
@@ -53,8 +52,6 @@ func (b *Bot) defaultHandler(ctx context.Context, _ *tgbotapi.Bot, update *model
 			b.processStartHandler(ctx, update)
 		case "/help":
 			b.processHelpHandler(ctx, update)
-		case "/connections":
-			b.processConnectionsHandler(ctx, update)
 		}
 	}
 }
@@ -65,14 +62,4 @@ func (b *Bot) processStartHandler(ctx context.Context, update *models.Update) {
 
 func (b *Bot) processHelpHandler(ctx context.Context, update *models.Update) {
 	b.sendMessage(ctx, "Help ain't coming", update.Message.Chat.ID)
-}
-
-func (b *Bot) processConnectionsHandler(ctx context.Context, update *models.Update) {
-	msg, err := b.formatConnectionsJSON()
-	if err != nil {
-		b.logger.Errorw("Error formatting JSON", "error", err)
-		b.sendMessage(ctx, "Sorry, error occured try again", b.ownerID)
-	}
-	stringMessage := fmt.Sprintf("```%v```", msg)
-	b.sendMessage(ctx, stringMessage, b.ownerID)
 }

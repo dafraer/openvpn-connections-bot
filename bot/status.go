@@ -58,6 +58,7 @@ func (b *Bot) processStatusFile(ctx context.Context, file *os.File) {
 	scanner.Scan()
 	scanner.Scan()
 	scanner.Scan()
+	tmp := make(map[Name]struct{})
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == endLine {
@@ -66,7 +67,12 @@ func (b *Bot) processStatusFile(ctx context.Context, file *os.File) {
 		connection, err := b.parseConnection(line)
 		if err != nil {
 			b.logger.Errorw("Error parsing connection string", "error", err)
+			return
 		}
+
+		tmp[connection.Name] = struct{}{}
+
+		//Check if its a new connection
 		if _, ok := b.connections[connection.Name]; !ok {
 			//add real address
 			realAddr, err := getAddrFromIP(ctx, connection.IP)
@@ -81,9 +87,17 @@ func (b *Bot) processStatusFile(ctx context.Context, file *os.File) {
 			b.SendNewConnection(ctx, connection)
 		}
 	}
+	//Check if anyone disconnected
+	for k, v := range b.connections {
+		if _, ok := tmp[k]; !ok {
+			msg := formatDisconnected(v)
+			b.sendMessage(ctx, msg, b.ownerID)
+			delete(b.connections, k)
+		}
+	}
 }
 
 func (b *Bot) SendNewConnection(ctx context.Context, conn *Connection) {
-	msg := formatConnectionMessage(conn)
+	msg := formatNewConnectionMessage(conn)
 	b.sendMessage(ctx, msg, b.ownerID)
 }
