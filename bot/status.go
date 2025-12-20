@@ -39,15 +39,22 @@ type Connection struct {
 func (b *Bot) MonitorStatus(ctx context.Context) {
 	b.logger.Infow("Status Monitor is running")
 	for {
-		time.Sleep(readingInterval)
-		f, err := os.Open(openVPNStatusPath)
-		if err != nil {
-			panic(err)
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			time.Sleep(readingInterval)
+			f, err := os.Open(openVPNStatusPath)
+			if err != nil {
+				b.logger.Errorw("Error reading from file", "error", err)
+				continue
+			}
+			b.processStatusFile(ctx, f)
+			if err := f.Close(); err != nil {
+				b.logger.Errorw("Error closing file", "error", err)
+			}
 		}
-		b.processStatusFile(ctx, f)
-		if err := f.Close(); err != nil {
-			panic(err)
-		}
+
 	}
 }
 
@@ -74,6 +81,7 @@ func (b *Bot) processStatusFile(ctx context.Context, file *os.File) {
 
 		//Check if its a new connection
 		if _, ok := b.connections[connection.Name]; !ok {
+			b.logger.Infow("New connection", "connection", connection)
 			//add real address
 			realAddr, err := getAddrFromIP(ctx, connection.IP)
 			if err != nil {
@@ -89,6 +97,7 @@ func (b *Bot) processStatusFile(ctx context.Context, file *os.File) {
 	//Check if anyone disconnected
 	for k, v := range b.connections {
 		if _, ok := tmp[k]; !ok {
+			b.logger.Infow("Disconnected", "connection", v)
 			msg := formatDisconnected(v)
 			b.sendMessage(ctx, msg, b.ownerID)
 			delete(b.connections, k)

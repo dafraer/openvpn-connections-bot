@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	tgbotapi "github.com/go-telegram/bot"
 )
@@ -81,6 +82,8 @@ type AddrResponse struct {
 
 func getAddrFromIP(ctx context.Context, ip string) (string, error) {
 	ip = trimPort(ip)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf(addrFromIPURL, ip), http.NoBody)
 	if err != nil {
 		return "", err
@@ -89,6 +92,9 @@ func getAddrFromIP(ctx context.Context, ip string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	defer resp.Body.Close()
+
 	var respStruct AddrResponse
 	if err := json.NewDecoder(resp.Body).Decode(&respStruct); err != nil {
 		return "", err
