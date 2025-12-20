@@ -13,7 +13,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const defaultLogPath = "../log/logs.txt"
+const defaultLogPath = "./log/logs.txt"
 
 func main() {
 	if err := godotenv.Load(); err != nil {

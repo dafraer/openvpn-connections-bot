@@ -37,12 +37,14 @@ func New(token string, logger *zap.SugaredLogger, userID int64) (*Bot, error) {
 
 // Run runs the bot using long polling
 func (b *Bot) Run(ctx context.Context) {
+	b.logger.Infow("Bot is running")
 	go b.MonitorStatus(ctx)
 	b.b.Start(ctx)
 }
 
 // defaultHandler
 func (b *Bot) defaultHandler(ctx context.Context, _ *tgbotapi.Bot, update *models.Update) {
+	b.logger.Infow("New update recieved", "update", update)
 	if update.Message != nil && update.Message.Chat.ID == b.ownerID {
 		switch update.Message.Text {
 		case "/start":

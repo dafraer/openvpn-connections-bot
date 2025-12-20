@@ -36,6 +36,7 @@ type Connection struct {
 }
 
 func (b *Bot) MonitorStatus(ctx context.Context) {
+	b.logger.Infow("Status Monitor is running")
 	for {
 		time.Sleep(readingInterval)
 		f, err := os.Open(openVPNStatusPath)
