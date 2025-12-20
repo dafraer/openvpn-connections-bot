@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
 	"os/signal"
 	"strconv"
@@ -22,7 +23,7 @@ func main() {
 	strUserID := os.Getenv("USER_ID")
 	userID, err := strconv.Atoi(strUserID)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Error getting owner ID: %v", err)
 	}
 	logPath := os.Getenv("LOG_PATH")
 	if token == "" {
