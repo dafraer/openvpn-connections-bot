@@ -46,7 +46,7 @@ func main() {
 	newAddr := make(chan string)
 	reqAddr := make(chan string)
 	respAddr := make(chan []string)
-	t := tracker.New(newAddr, reqAddr, respAddr)
+	t := tracker.New(newAddr, reqAddr, respAddr, sugar)
 
 	//Create notifier
 	n := notifier.New(userID, msg, sugar, t)
