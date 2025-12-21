@@ -63,6 +63,7 @@ func (n *Notifier) processStatusFile(ctx context.Context, file *os.File) {
 			return
 		case midLine:
 			midLineFlag = true
+			scanner.Scan()
 			continue
 		}
 
