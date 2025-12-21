@@ -69,6 +69,7 @@ func (n *Notifier) processStatusFile(ctx context.Context, file *os.File) {
 		if midLineFlag {
 			name, virtAddr := n.parseVirtAddr(line)
 			n.connections[Name(name)].InternalIP = virtAddr
+			continue
 		}
 
 		connection, err := n.parseConnection(line)
