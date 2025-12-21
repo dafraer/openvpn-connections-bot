@@ -53,12 +53,21 @@ func formatDisconnectedMessage(conn *Connection) string {
 	disconnected := "🔴 *Disconnected* \n• *Name:* `%s` \n• *IP:* `%s` • *From:* `%s` \n• *Since:* `%v` \n• *Recv:* `%v` \n• *Sent:* `%v` \n • *Visited:*\n •`%v`"
 	//only send 2 subdomains
 	for i, _ := range conn.Visited {
+		conn.Visited[i] = strings.TrimSuffix(conn.Visited[i], ".")
 		subDomains := strings.Split(conn.Visited[i], ".")
-		if len(subDomains) >= 3 {
-			conn.Visited[i] = subDomains[len(subDomains)-3] + "." + subDomains[len(subDomains)-2]
+		if len(subDomains) >= 2 {
+			conn.Visited[i] = subDomains[len(subDomains)-2] + "." + subDomains[len(subDomains)-1]
 		}
 	}
-	return fmt.Sprintf(disconnected, string(conn.Name), conn.IP, conn.Address, conn.Since, conn.BytesRecieved, conn.BytesSent, strings.Join(conn.Visited, "\n•"))
+	m := make(map[string]struct{})
+	for _, v := range conn.Visited {
+		m[v] = struct{}{}
+	}
+	s := make([]string, 0, len(m))
+	for k, _ := range m {
+		s = append(s, k)
+	}
+	return fmt.Sprintf(disconnected, string(conn.Name), conn.IP, conn.Address, conn.Since, conn.BytesRecieved, conn.BytesSent, strings.Join(s, "\n•"))
 }
 
 type AddrResponse struct {
