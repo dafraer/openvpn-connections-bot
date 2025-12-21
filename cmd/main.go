@@ -14,8 +14,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const defaultLogPath = "./log/logs.txt"
-
 func main() {
 	if err := godotenv.Load(); err != nil {
 		panic(err)
@@ -26,12 +24,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error getting owner ID: %v", err)
 	}
-	logPath := os.Getenv("LOG_PATH")
 	if token == "" {
 		panic("token is not specified")
-	}
-	if logPath == "" {
-		logPath = defaultLogPath
 	}
 
 	//Declare context that is marked Done when os.Interrupt is called
@@ -39,12 +33,8 @@ func main() {
 	defer cancel()
 
 	//Create logger
-	cfg := zap.NewDevelopmentConfig()
-	cfg.Development = true
-	cfg.OutputPaths = []string{logPath}
-	cfg.ErrorOutputPaths = []string{logPath}
 
-	logger, err := cfg.Build()
+	logger, err := zap.NewDevelopment()
 	if err != nil {
 		panic(err)
 	}
@@ -54,7 +44,7 @@ func main() {
 	msg := make(chan notifier.Message)
 
 	//Create notifier
-	n := notifier.New(userID, msg)
+	n := notifier.New(userID, msg, sugar)
 
 	//Create bot
 	myBot, err := bot.New(token, sugar, n, msg)

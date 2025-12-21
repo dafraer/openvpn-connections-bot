@@ -22,12 +22,13 @@ type Notifier struct {
 	logger      *zap.SugaredLogger
 }
 
-func New(ownerID int64, msg chan Message) *Notifier {
+func New(ownerID int64, msg chan Message, logger *zap.SugaredLogger) *Notifier {
 	m := make(map[Name]*Connection)
 	return &Notifier{
 		ownerID:     ownerID,
 		connections: m,
 		msg:         msg,
+		logger:      logger,
 	}
 }
 
