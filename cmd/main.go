@@ -15,6 +15,13 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const (
+	logLevelDebug = "debug"
+	logLevelInfo  = "info"
+	logLevelWarn  = "warn"
+	logLevelError = "error"
+)
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		panic(err)
@@ -22,11 +29,15 @@ func main() {
 	token := os.Getenv("TOKEN")
 	strUserID := os.Getenv("USER_ID")
 	userID, err := strconv.ParseInt(strUserID, 10, 64)
+	logLevel := os.Getenv("info")
 	if err != nil {
 		log.Fatalf("Error getting owner ID: %v", err)
 	}
 	if token == "" {
 		panic("token is not specified")
+	}
+	if logLevel == "" {
+		logLevel = "info"
 	}
 
 	//Declare context that is marked Done when os.Interrupt is called
@@ -34,8 +45,20 @@ func main() {
 	defer cancel()
 
 	//Create logger
-
-	logger, err := zap.NewDevelopment()
+	loggerCfg := zap.NewDevelopmentConfig()
+	switch logLevel {
+	case logLevelDebug:
+		loggerCfg.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+	case logLevelInfo:
+		loggerCfg.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
+	case logLevelWarn:
+		loggerCfg.Level = zap.NewAtomicLevelAt(zap.WarnLevel)
+	case logLevelError:
+		loggerCfg.Level = zap.NewAtomicLevelAt(zap.ErrorLevel)
+	default:
+		loggerCfg.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
+	}
+	logger, err := loggerCfg.Build()
 	if err != nil {
 		panic(err)
 	}
