@@ -60,6 +60,10 @@ func (n *Notifier) processStatusFile(ctx context.Context, file *os.File) {
 		case endLine:
 			//Check if anyone disconnected
 			n.CheckDisconnected(conns)
+			//We check for new ones only when we have full conections list incl virtual adressess
+			for _, connection := range conns {
+				n.CheckNewConnection(ctx, connection)
+			}
 			return
 		case midLine:
 			midLineFlag = true
@@ -81,11 +85,6 @@ func (n *Notifier) processStatusFile(ctx context.Context, file *os.File) {
 		}
 
 		conns[connection.Name] = connection
-		//Check if its a new connection
-	}
-	//We check for new ones only when we have full conections list incl virtual adressess
-	for _, connection := range conns {
-		n.CheckNewConnection(ctx, connection)
 	}
 
 }
