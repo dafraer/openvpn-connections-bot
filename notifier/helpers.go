@@ -50,8 +50,15 @@ func formatConnectedMessage(conn *Connection) string {
 }
 
 func formatDisconnectedMessage(conn *Connection) string {
-	disconnected := "🔴 *Disconnected* \n• *Name:* `%s` \n• *IP:* `%s` • *From:* `%s` \n• *Since:* `%v` \n• *Recv:* `%v` \n• *Sent:* `%v` \n • *Visited:*\n `%v`"
-	return fmt.Sprintf(disconnected, string(conn.Name), conn.IP, conn.Address, conn.Since, conn.BytesRecieved, conn.BytesSent, strings.Join(conn.Visited, "\n"))
+	disconnected := "🔴 *Disconnected* \n• *Name:* `%s` \n• *IP:* `%s` • *From:* `%s` \n• *Since:* `%v` \n• *Recv:* `%v` \n• *Sent:* `%v` \n • *Visited:*\n •`%v`"
+	//only send 2 subdomains
+	for i, _ := range conn.Visited {
+		subDomains := strings.Split(conn.Visited[i], ".")
+		if len(subDomains) >= 2 {
+			conn.Visited[i] = subDomains[len(subDomains)-2] + subDomains[len(subDomains)-1]
+		}
+	}
+	return fmt.Sprintf(disconnected, string(conn.Name), conn.IP, conn.Address, conn.Since, conn.BytesRecieved, conn.BytesSent, strings.Join(conn.Visited, "\n•"))
 }
 
 type AddrResponse struct {
