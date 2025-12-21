@@ -113,6 +113,7 @@ func (n *Notifier) CheckNewConnection(ctx context.Context, connection *Connectio
 		n.connections[connection.Name] = connection
 
 		n.tracker.NewAddr <- connection.InternalIP
+		n.logger.Debugw("Added connection to tracker")
 
 		msg := formatConnectedMessage(connection)
 		n.sendMessage(msg, n.ownerID)

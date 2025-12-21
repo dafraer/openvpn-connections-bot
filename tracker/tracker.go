@@ -2,7 +2,6 @@ package tracker
 
 import (
 	"context"
-	"log"
 	"net"
 	"net/netip"
 	"time"
@@ -29,12 +28,14 @@ func New(newAddr chan string, reqAddr chan string, respAddr chan []string) *Trac
 }
 
 func (t *Tracker) Run(ctx context.Context) {
+	t.logger.Debugw("tracker is running")
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case addr := <-t.NewAddr:
 			t.domains[virtAddr(addr)] = make(map[string]struct{})
+			t.logger.Debugw("Added new virtAddr")
 		case addr := <-t.ReqAddr:
 			resp := make([]string, 0, len(t.domains[virtAddr(addr)]))
 			for k, _ := range t.domains[virtAddr(addr)] {
@@ -62,7 +63,7 @@ func (t *Tracker) Track() {
 // GetVisited Vibe coded idk what it really does
 // returns empty slice in case of an error
 func (t *Tracker) GetVisited(srcIP string) []string {
-
+	t.logger.Debugw("GetVisited called")
 	src, err := netip.ParseAddr(srcIP)
 	if err != nil {
 		t.logger.Errorw("Error parsing ip address", "error", err)
@@ -71,14 +72,14 @@ func (t *Tracker) GetVisited(srcIP string) []string {
 
 	c, err := conntrack.Dial(nil)
 	if err != nil {
-		log.Fatal(err)
+		t.logger.Errorw("Error dialing conntrack", "error", err)
 	}
 	defer c.Close()
 
 	// Dumps current conntrack entries.
 	flows, err := c.Dump(nil)
 	if err != nil {
-		log.Fatal(err)
+		t.logger.Errorw("Error dumping entries", "error", err)
 	}
 
 	dsts := make([]string, 0, 128)
@@ -103,8 +104,4 @@ func (t *Tracker) GetVisited(srcIP string) []string {
 		dsts = append(dsts, domains...)
 	}
 	return dsts
-}
-
-func MonitorOutoginConns(ctx context.Context, notify chan struct{}) {
-
 }
