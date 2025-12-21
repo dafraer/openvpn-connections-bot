@@ -53,13 +53,13 @@ func (n *Notifier) processStatusFile(ctx context.Context, file *os.File) {
 	scanner.Scan()
 	scanner.Scan()
 	midLineFlag := false
-	tmp := make(map[Name]struct{})
+	conns := make(map[Name]*Connection)
 	for scanner.Scan() {
 		line := scanner.Text()
 		switch line {
 		case endLine:
 			//Check if anyone disconnected
-			n.CheckDisconnected(tmp)
+			n.CheckDisconnected(conns)
 			return
 		case midLine:
 			midLineFlag = true
@@ -68,7 +68,7 @@ func (n *Notifier) processStatusFile(ctx context.Context, file *os.File) {
 
 		if midLineFlag {
 			name, virtAddr := n.parseVirtAddr(line)
-			n.connections[Name(name)].InternalIP = virtAddr
+			conns[Name(name)].InternalIP = virtAddr
 			continue
 		}
 
@@ -78,15 +78,17 @@ func (n *Notifier) processStatusFile(ctx context.Context, file *os.File) {
 			return
 		}
 
-		tmp[connection.Name] = struct{}{}
-
+		conns[connection.Name] = connection
 		//Check if its a new connection
+	}
+	//We check for new ones only when we have full conections list incl virtual adressess
+	for _, connection := range conns {
 		n.CheckNewConnection(ctx, connection)
 	}
 
 }
 
-func (n *Notifier) CheckDisconnected(tmp map[Name]struct{}) {
+func (n *Notifier) CheckDisconnected(tmp map[Name]*Connection) {
 	for k, v := range n.connections {
 		if _, ok := tmp[k]; !ok {
 			n.logger.Infow("Disconnected", "connection", v)
