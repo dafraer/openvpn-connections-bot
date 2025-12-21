@@ -11,6 +11,7 @@ import (
 
 	"github.com/dafraer/openvpn-connections-bot/bot"
 	"github.com/dafraer/openvpn-connections-bot/notifier"
+	"github.com/dafraer/openvpn-connections-bot/tracker"
 	"github.com/joho/godotenv"
 )
 
@@ -40,11 +41,15 @@ func main() {
 	}
 	sugar := logger.Sugar()
 
-	//Create messge channel
+	//Create channels
 	msg := make(chan notifier.Message)
+	newAddr := make(chan string)
+	reqAddr := make(chan string)
+	respAddr := make(chan []string)
+	t := tracker.New(newAddr, reqAddr, respAddr)
 
 	//Create notifier
-	n := notifier.New(userID, msg, sugar)
+	n := notifier.New(userID, msg, sugar, t)
 
 	//Create bot
 	myBot, err := bot.New(token, sugar, n, msg)

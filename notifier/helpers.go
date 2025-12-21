@@ -45,13 +45,13 @@ func (n *Notifier) parseConnection(msg string) (*Connection, error) {
 }
 
 func formatConnectedMessage(conn *Connection) string {
-	newConnMsg := "🟢 *New connection* • *Name:* `%s` • *IP:* `%s` • *From:* `%s` • *Since:* `%v`"
+	newConnMsg := "🟢 *New connection* \n• *Name:* `%s` \n• *IP:* `%s` \n• *From:* `%s` \n• *Since:* `%v`"
 	return fmt.Sprintf(newConnMsg, string(conn.Name), conn.IP, conn.Address, conn.Since)
 }
 
 func formatDisconnectedMessage(conn *Connection) string {
-	disconnected := "🔴 *Disconnected* • *Name:* `%s` • *IP:* `%s` • *From:* `%s` • *Since:* `%v` • *Recv:* `%v` • *Sent:* `%v`"
-	return fmt.Sprintf(disconnected, string(conn.Name), conn.IP, conn.Address, conn.Since, conn.BytesRecieved, conn.BytesSent)
+	disconnected := "🔴 *Disconnected* \n• *Name:* `%s` \n• *IP:* `%s` • *From:* `%s` \n• *Since:* `%v` \n• *Recv:* `%v` \n• *Sent:* `%v` \n • *Visited:*\n `%v`"
+	return fmt.Sprintf(disconnected, string(conn.Name), conn.IP, conn.Address, conn.Since, conn.BytesRecieved, conn.BytesSent, strings.Join(conn.Visited, "\n"))
 }
 
 type AddrResponse struct {
@@ -93,4 +93,9 @@ func trimPort(ip string) string {
 		}
 	}
 	return ip
+}
+
+func (n *Notifier) parseVirtAddr(line string) (name string, addr string) {
+	elems := strings.Split(line, ",")
+	return elems[1], elems[0]
 }

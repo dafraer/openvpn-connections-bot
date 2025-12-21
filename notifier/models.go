@@ -1,6 +1,28 @@
 package notifier
 
+import (
+	"time"
+
+	"github.com/dafraer/openvpn-connections-bot/tracker"
+	"go.uber.org/zap"
+)
+
+const (
+	readingInterval   = time.Second * 10
+	openVPNStatusPath = "/var/log/openvpn/status.log"
+	midLine           = "ROUTING TABLE"
+	endLine           = "GLOBAL STATS"
+)
+
 type Name string
+
+type Notifier struct {
+	connections map[Name]*Connection
+	tracker     *tracker.Tracker
+	ownerID     int64
+	msg         chan Message
+	logger      *zap.SugaredLogger
+}
 
 type Connection struct {
 	Name          Name
@@ -9,6 +31,8 @@ type Connection struct {
 	BytesRecieved uint64
 	BytesSent     uint64
 	Since         string
+	Visited       []string
+	InternalIP    string
 }
 
 type Message struct {

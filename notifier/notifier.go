@@ -6,34 +6,24 @@ import (
 	"os"
 	"time"
 
+	"github.com/dafraer/openvpn-connections-bot/tracker"
 	"go.uber.org/zap"
 )
 
-const (
-	readingInterval   = time.Second * 10
-	openVPNStatusPath = "/var/log/openvpn/status.log"
-	endLine           = "ROUTING TABLE"
-)
-
-type Notifier struct {
-	connections map[Name]*Connection
-	ownerID     int64
-	msg         chan Message
-	logger      *zap.SugaredLogger
-}
-
-func New(ownerID int64, msg chan Message, logger *zap.SugaredLogger) *Notifier {
+func New(ownerID int64, msg chan Message, logger *zap.SugaredLogger, tracker *tracker.Tracker) *Notifier {
 	m := make(map[Name]*Connection)
 	return &Notifier{
 		ownerID:     ownerID,
 		connections: m,
 		msg:         msg,
 		logger:      logger,
+		tracker:     tracker,
 	}
 }
 
 func (n *Notifier) Listen(ctx context.Context) {
 	n.logger.Infow("Status Monitor is running")
+	go n.tracker.Run(ctx)
 	for {
 		select {
 		case <-ctx.Done():
@@ -62,21 +52,25 @@ func (n *Notifier) processStatusFile(ctx context.Context, file *os.File) {
 	scanner.Scan()
 	scanner.Scan()
 	scanner.Scan()
+	midLineFlag := false
 	tmp := make(map[Name]struct{})
 	for scanner.Scan() {
 		line := scanner.Text()
-		if line == endLine {
+		switch line {
+		case endLine:
 			//Check if anyone disconnected
-			for k, v := range n.connections {
-				if _, ok := tmp[k]; !ok {
-					n.logger.Infow("Disconnected", "connection", v)
-					msg := formatDisconnectedMessage(v)
-					n.sendMessage(msg, n.ownerID)
-					delete(n.connections, k)
-				}
-			}
+			n.CheckDisconnected(tmp)
 			return
+		case midLine:
+			midLineFlag = true
+			continue
 		}
+
+		if midLineFlag {
+			name, virtAddr := n.parseVirtAddr(line)
+			n.connections[Name(name)].InternalIP = virtAddr
+		}
+
 		connection, err := n.parseConnection(line)
 		if err != nil {
 			n.logger.Errorw("Error parsing connection string", "error", err)
@@ -86,19 +80,40 @@ func (n *Notifier) processStatusFile(ctx context.Context, file *os.File) {
 		tmp[connection.Name] = struct{}{}
 
 		//Check if its a new connection
-		if _, ok := n.connections[connection.Name]; !ok {
-			n.logger.Infow("New connection", "connection", connection)
-			//add real address
-			realAddr, err := getAddrFromIP(ctx, connection.IP)
-			if err != nil {
-				n.logger.Errorw("Error calling address API", "error", err)
-			}
-
-			connection.Address = realAddr
-			n.connections[connection.Name] = connection
-			msg := formatConnectedMessage(connection)
-			n.sendMessage(msg, n.ownerID)
-		}
+		n.CheckNewConnection(ctx, connection)
 	}
 
+}
+
+func (n *Notifier) CheckDisconnected(tmp map[Name]struct{}) {
+	for k, v := range n.connections {
+		if _, ok := tmp[k]; !ok {
+			n.logger.Infow("Disconnected", "connection", v)
+			n.tracker.ReqAddr <- v.InternalIP
+			domains := <-n.tracker.RespAddr
+			v.Visited = domains
+			msg := formatDisconnectedMessage(v)
+			n.sendMessage(msg, n.ownerID)
+			delete(n.connections, k)
+		}
+	}
+}
+
+func (n *Notifier) CheckNewConnection(ctx context.Context, connection *Connection) {
+	if _, ok := n.connections[connection.Name]; !ok {
+		n.logger.Infow("New connection", "connection", connection)
+		//add real address
+		realAddr, err := getAddrFromIP(ctx, connection.IP)
+		if err != nil {
+			n.logger.Errorw("Error calling address API", "error", err)
+		}
+
+		connection.Address = realAddr
+		n.connections[connection.Name] = connection
+
+		n.tracker.NewAddr <- connection.InternalIP
+
+		msg := formatConnectedMessage(connection)
+		n.sendMessage(msg, n.ownerID)
+	}
 }
