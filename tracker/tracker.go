@@ -20,10 +20,14 @@ type Tracker struct {
 	RespAddr chan []string
 }
 
-func New(newAddr chan string, reqAddr chan string, respAddr chan []string) *Tracker {
+func New(newAddr chan string, reqAddr chan string, respAddr chan []string, logger *zap.SugaredLogger) *Tracker {
 	m := make(map[virtAddr]map[string]struct{})
 	return &Tracker{
-		domains: m,
+		domains:  m,
+		ReqAddr:  reqAddr,
+		NewAddr:  newAddr,
+		RespAddr: respAddr,
+		logger:   logger,
 	}
 }
 
