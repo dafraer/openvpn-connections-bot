@@ -39,7 +39,7 @@ func (t *Tracker) Run(ctx context.Context) {
 			return
 		case addr := <-t.NewAddr:
 			t.domains[virtAddr(addr)] = make(map[string]struct{})
-			t.logger.Debugw("Added new virtAddr")
+			t.logger.Debugw("Added new virtAddr", "address", addr)
 		case addr := <-t.ReqAddr:
 			resp := make([]string, 0, len(t.domains[virtAddr(addr)]))
 			for k, _ := range t.domains[virtAddr(addr)] {
