@@ -55,7 +55,7 @@ func formatDisconnectedMessage(conn *Connection) string {
 	for i, _ := range conn.Visited {
 		subDomains := strings.Split(conn.Visited[i], ".")
 		if len(subDomains) >= 3 {
-			conn.Visited[i] = subDomains[len(subDomains)-3] + subDomains[len(subDomains)-2]
+			conn.Visited[i] = subDomains[len(subDomains)-3] + "." + subDomains[len(subDomains)-2]
 		}
 	}
 	return fmt.Sprintf(disconnected, string(conn.Name), conn.IP, conn.Address, conn.Since, conn.BytesRecieved, conn.BytesSent, strings.Join(conn.Visited, "\n•"))

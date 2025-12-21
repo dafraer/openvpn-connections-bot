@@ -103,7 +103,7 @@ func (t *Tracker) GetVisited(srcIP string) []string {
 		dst := orig.DestinationAddress.String()
 		domains, err := net.LookupAddr(dst)
 		if err != nil {
-			t.logger.Errorw("Error Looking up address", "error", err)
+			t.logger.Debugw("Error Looking up address", "error", err)
 		}
 		dsts = append(dsts, domains...)
 	}
