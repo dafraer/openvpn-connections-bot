@@ -50,7 +50,7 @@ func formatConnectedMessage(conn *Connection) string {
 }
 
 func formatDisconnectedMessage(conn *Connection) string {
-	disconnected := "🔴 *Disconnected* \n• *Name:* `%s` \n• *IP:* `%s` • *From:* `%s` \n• *Since:* `%v` UTC\\+3 \n• *Recv:* `%v` bytes \n• *Sent:* `%v` bytes \n • *Visited:*\n •`%v`"
+	disconnected := "🔴 *Disconnected* \n• *Name:* `%s` \n• *IP:* `%s` • *From:* `%s` \n• *Since:* `%v` UTC\\+3 \n• *Recv:* `%v` bytes \n• *Sent:* `%v` bytes \n • *Visited:*\n `•%v`"
 	//only send 2 subdomains
 	for i, _ := range conn.Visited {
 		conn.Visited[i] = strings.TrimSuffix(conn.Visited[i], ".")
