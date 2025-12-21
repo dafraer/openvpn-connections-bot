@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/dafraer/openvpn-connections-bot/bot"
+	"github.com/dafraer/openvpn-connections-bot/notifier"
 	"github.com/joho/godotenv"
 )
 
@@ -21,7 +22,7 @@ func main() {
 	}
 	token := os.Getenv("TOKEN")
 	strUserID := os.Getenv("USER_ID")
-	userID, err := strconv.Atoi(strUserID)
+	userID, err := strconv.ParseInt(strUserID, 10, 64)
 	if err != nil {
 		log.Fatalf("Error getting owner ID: %v", err)
 	}
@@ -49,8 +50,14 @@ func main() {
 	}
 	sugar := logger.Sugar()
 
+	//Create messge channel
+	msg := make(chan notifier.Message)
+
+	//Create notifier
+	n := notifier.New(userID, msg)
+
 	//Create bot
-	myBot, err := bot.New(token, sugar, int64(userID))
+	myBot, err := bot.New(token, sugar, n, msg)
 	if err != nil {
 		panic(err)
 	}
