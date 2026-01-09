@@ -41,7 +41,7 @@ func formatUsageMessage(users map[string]*Usage) string {
 	}
 	slices.SortFunc(usersSlice, cmpFunc)
 	for i, v := range usersSlice {
-		builder.WriteString(fmt.Sprintf("%d. Name:%s, Total data used: %s\n", i+1, v.name, formatBytes(v.total)))
+		builder.WriteString(fmt.Sprintf("%d\\. Name:%s, Total data used: %s\n", i+1, v.name, formatBytes(v.total)))
 	}
 	return builder.String()
 }
