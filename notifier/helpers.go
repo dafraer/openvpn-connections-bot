@@ -1,10 +1,12 @@
 package notifier
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -114,4 +116,59 @@ func trimPort(ip string) string {
 func (n *Notifier) parseVirtAddr(line string) (name string, addr string) {
 	elems := strings.Split(line, ",")
 	return elems[1], elems[0]
+}
+
+type Usage struct {
+	Name     string
+	Recieved uint64
+	Sent     uint64
+}
+
+func (n *Notifier) updateUsage(name Name, recievedBytes, sentBytes uint64) error {
+	n.usageFileMutex.Lock()
+	defer n.usageFileMutex.Unlock()
+	f, err := os.Open(n.usageFilePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	//Parse file
+	scanner := bufio.NewScanner(f)
+	users := make(map[Name]*Usage)
+	for scanner.Scan() {
+		s := strings.Split(scanner.Text(), ",")
+		if len(s) < 3 {
+			return fmt.Errorf("Wrong usage file format")
+		}
+		recieved, err := strconv.ParseUint(s[1], 10, 64)
+		if err != nil {
+			return err
+		}
+		sent, err := strconv.ParseUint(s[2], 10, 64)
+		if err != nil {
+			return err
+		}
+		u := Usage{Name: s[0], Recieved: recieved, Sent: sent}
+		users[Name(s[0])] = &u
+	}
+
+	//update usage
+	if users[name] == nil {
+		users[name] = &Usage{}
+	}
+	user := users[name]
+	user.Recieved += recievedBytes
+	user.Sent += sentBytes
+
+	//Write file
+	res := strings.Builder{}
+	for _, v := range users {
+		res.WriteString(fmt.Sprintf("%s,%v,%v\n", string(v.Name), v.Recieved, v.Sent))
+	}
+	if err := os.WriteFile(n.usageFilePath, []byte(res.String()), 0644); err != nil {
+		return err
+	}
+
+	return nil
 }

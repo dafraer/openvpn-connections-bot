@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync"
 
 	"go.uber.org/zap"
 
@@ -26,6 +27,7 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		panic(err)
 	}
+	usageFilePath := os.Getenv("USAGE_FILE")
 	token := os.Getenv("TOKEN")
 	strUserID := os.Getenv("USER_ID")
 	userID, err := strconv.ParseInt(strUserID, 10, 64)
@@ -64,7 +66,8 @@ func main() {
 	}
 	sugar := logger.Sugar()
 
-	//Create channels
+	//Create channels and usage File mutex
+	mutex := &sync.Mutex{}
 	msg := make(chan notifier.Message)
 	newAddr := make(chan string)
 	reqAddr := make(chan string)
@@ -72,10 +75,10 @@ func main() {
 	t := tracker.New(newAddr, reqAddr, respAddr, sugar)
 
 	//Create notifier
-	n := notifier.New(userID, msg, sugar, t)
+	n := notifier.New(userID, msg, sugar, t, mutex, usageFilePath)
 
 	//Create bot
-	myBot, err := bot.New(token, sugar, n, msg)
+	myBot, err := bot.New(token, sugar, n, msg, mutex, userID, usageFilePath)
 	if err != nil {
 		panic(err)
 	}

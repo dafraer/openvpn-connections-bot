@@ -1,6 +1,7 @@
 package notifier
 
 import (
+	"sync"
 	"time"
 
 	"github.com/dafraer/openvpn-connections-bot/tracker"
@@ -17,11 +18,13 @@ const (
 type Name string
 
 type Notifier struct {
-	connections map[Name]*Connection
-	tracker     *tracker.Tracker
-	ownerID     int64
-	msg         chan Message
-	logger      *zap.SugaredLogger
+	connections    map[Name]*Connection
+	tracker        *tracker.Tracker
+	ownerID        int64
+	msg            chan Message
+	logger         *zap.SugaredLogger
+	usageFileMutex *sync.Mutex
+	usageFilePath  string
 }
 
 type Connection struct {

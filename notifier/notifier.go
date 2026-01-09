@@ -4,20 +4,23 @@ import (
 	"bufio"
 	"context"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/dafraer/openvpn-connections-bot/tracker"
 	"go.uber.org/zap"
 )
 
-func New(ownerID int64, msg chan Message, logger *zap.SugaredLogger, tracker *tracker.Tracker) *Notifier {
+func New(ownerID int64, msg chan Message, logger *zap.SugaredLogger, tracker *tracker.Tracker, usageFileMutex *sync.Mutex, usageFilePath string) *Notifier {
 	m := make(map[Name]*Connection)
 	return &Notifier{
-		ownerID:     ownerID,
-		connections: m,
-		msg:         msg,
-		logger:      logger,
-		tracker:     tracker,
+		ownerID:        ownerID,
+		connections:    m,
+		msg:            msg,
+		logger:         logger,
+		tracker:        tracker,
+		usageFileMutex: usageFileMutex,
+		usageFilePath:  usageFilePath,
 	}
 }
 
@@ -98,6 +101,9 @@ func (n *Notifier) CheckDisconnected(tmp map[Name]*Connection) {
 			v.Visited = domains
 			msg := formatDisconnectedMessage(v)
 			n.sendMessage(msg, n.ownerID)
+			if err := n.updateUsage(v.Name, v.BytesRecieved, v.BytesSent); err != nil {
+				n.logger.Errorw("Error updating usage file", "error", err)
+			}
 			delete(n.connections, k)
 		}
 	}
