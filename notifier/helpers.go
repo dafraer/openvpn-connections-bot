@@ -155,7 +155,7 @@ func (n *Notifier) updateUsage(name Name, recievedBytes, sentBytes uint64) error
 
 	//update usage
 	if users[name] == nil {
-		users[name] = &Usage{}
+		users[name] = &Usage{Name: string(name)}
 	}
 	user := users[name]
 	user.Recieved += recievedBytes
